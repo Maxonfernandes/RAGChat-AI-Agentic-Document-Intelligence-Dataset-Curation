@@ -204,9 +204,3 @@ ragchat/
 - **Port Conflict (8000 or 3000):** If port 8000 is occupied, you can change `PORT=8001` in `.env` and update the Backend URL inside the web UI Settings.
 
 ---
-
-## 👥 Contributors
-- **Arshith Vaz**
-- **Maxon Fernandes**
-- **Janice Dsouza**
-- **Kaavya Rao**
