@@ -2,205 +2,224 @@
 
 ---
 
-## 🚀 Overview
+## Overview
 
-Enterprises possess vast repositories of unstructured and semi-structured documents holding immense potential value, but transforming this raw information into structured, analysis-ready datasets remains a major bottleneck. 
+Enterprise repositories contain large volumes of unstructured and semi-structured documents, making it difficult to extract meaningful information and transform it into structured, analysis-ready datasets.
 
-**RAGChat AI** is an intelligent, multi-agent RAG (Retrieval-Augmented Generation) system that ingests document collections (PDF, TXT, CSV, JSON, images, and web URLs), chunks and embeds them into a vector database, and deploys specialized AI agents to dynamically retrieve, synthesize, and export analysis-ready structured datasets using natural language commands.
+**RAGChat AI** is a multi-agent Retrieval-Augmented Generation (RAG) system that processes documents, retrieves relevant information, and generates structured datasets through natural language queries. It supports multiple file formats, vector-based retrieval, AI-powered synthesis, and data export.
 
----
+## System Architecture
 
-## 🔑 Where & How to Enter API Keys
+```mermaid
+flowchart TD
+    A[User / Documents] --> B[Next.js Frontend]
+    B <--> C[FastAPI Backend]
 
-You can enter your API keys using either of the two methods below:
+    C --> D[Master Agent]
+    D --> E[Query Planning]
+    E --> F[Vector Retrieval]
+    F --> G[Dataset Synthesis]
+    G --> H[Validation]
+    H --> I[Tables / Charts / CSV / JSON]
 
-### Method 1: Directly in the Web UI (Recommended & Instant)
-1. Launch the web application (`http://localhost:3000`).
-2. Click the **⚙️ Settings** icon in the top-right header (or the **"Set API Key"** badge).
-3. In the Settings modal:
-   - **Google Gemini API Key**: Paste your key (get one free at [aistudio.google.com](https://aistudio.google.com/)).
-   - **Gemini Model**: Choose your preferred model (e.g., `gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-1.5-pro`).
-   - *(Optional)* **DataStax Astra DB Token & Endpoint**: If using cloud vector search from [astra.datastax.com](https://astra.datastax.com/).
-4. Click **"Test Connection"** to verify, then click **"Save Settings"**.
-5. Your keys are securely preserved in your browser session and automatically transmitted with your requests.
+    J[PDF / CSV / TXT / JSON / Images / URLs] --> K[Parsing & Chunking]
+    K --> L[Embedding Generation]
+    L --> M[(Astra DB / Local Vector Store)]
+    F <--> M
 
----
+    I --> B
 
-### Method 2: In the `.env` Configuration File
-Create or edit the `.env` file in the project root directory:
+    style D fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    style M fill:#dcfce7,stroke:#16a34a,color:#14532d
+    style I fill:#f3e8ff,stroke:#9333ea,color:#581c87
+```
+
+## Key Features
+
+* **Multi-Agent Orchestration:** Coordinates specialized agents for conversation handling, query planning, information extraction, dataset synthesis, and validation.
+* **Dynamic Dataset Generation:** Converts natural language queries into structured tables with automatically identified columns and downloadable CSV or JSON output.
+* **Interactive Data Visualization:** Renders interactive bar charts and metric visualizations using D3.js.
+* **Multi-Format Document Ingestion:** Supports PDF, TXT, CSV, JSON, images through OCR, and web URLs.
+* **Flexible Vector Storage:** Integrates with DataStax Astra DB and supports a local vector store fallback.
+* **Source Grounding and Execution Tracing:** Displays processing steps, similarity scores, and retrieved document excerpts to improve transparency.
+
+## Configuration
+
+RAGChat AI supports two methods for configuring API credentials.
+
+### Method 1: Configure Through the Web Interface
+
+1. Start the application and open `http://localhost:3000`.
+2. Open **Settings** from the application header or select **Set API Key**.
+3. Enter your Google Gemini API key, available from [Google AI Studio](https://aistudio.google.com/).
+4. Select the desired Gemini model.
+5. Optionally, configure your DataStax Astra DB token and endpoint.
+6. Select **Test Connection**, then save the configuration.
+
+The application uses the configured credentials for subsequent requests. Avoid entering API keys on untrusted deployments.
+
+### Method 2: Configure Environment Variables
+
+Create a `.env` file in the project root:
 
 ```bash
-# 1. Google Gemini API Key (Get a free key from https://aistudio.google.com/)
+# Google Gemini Configuration
 GEMINI_API_KEY=your_gemini_api_key_here
-
-# Model to use (default: gemini-1.5-flash)
 GEMINI_MODEL=gemini-1.5-flash
 
-# 2. DataStax Astra DB (Optional - In-Memory/Local Vector Store is used automatically if empty)
+# DataStax Astra DB (Optional)
 ASTRA_DB_API_TOKEN=your_astra_token_here
 ASTRA_DB_ENDPOINT=https://your-database-id-region.apps.astra.datastax.com
 ASTRA_DB_KEYSPACE=default_keyspace
 COLLECTION_NAME=pdf
 
-# 3. Server Configuration
+# Backend Server Configuration
 HOST=0.0.0.0
 PORT=8000
 ```
 
-> **Note on Offline / Local Mode:**  
-> If you haven't added an API key yet, the application still works! It uses a high-performance local vector database, pure-Python PDF extraction, and deterministic semantic vectors so you can test document indexing, chunking, and search right away. Once you supply your Gemini API key, full multi-agent LLM synthesis and reasoning activate automatically.
+**Local Mode:** When cloud vector database credentials are not configured, the application can use its local vector storage implementation, provided the local mode dependencies are available. Document parsing, indexing, and retrieval capabilities depend on the configured embedding and storage implementations. Gemini-powered synthesis requires a valid API key.
 
----
+Never commit `.env` files or expose API credentials in a public repository.
 
-## 🏛️ System Architecture
+## Getting Started
 
-```mermaid
-graph TD
-    User([User Prompt / File Upload]) --> UI[Next.js Frontend UI]
-    UI --> API[FastAPI Backend :8000]
-    
-    subgraph MultiAgent [Agentic Multi-Agent Pipeline]
-        Master[MasterAgent Orchestrator]
-        Master --> Conv[ConversationAgent: Casual / Greetings]
-        Master --> Query[QueryAgent: Intent & Schema Planner]
-        Query --> Extract[ExtractionAgent: Vector Search]
-        Extract --> Synth[SynthesisAgent: Dataset & Summary]
-        Synth --> Valid[ValidationAgent: Factual Grounding]
-    end
-    
-    API --> Master
-    Extract --> VDB[(Vector DB: Astra DB + Local Fallback)]
-    
-    subgraph Ingestion [Document Ingestion Pipeline]
-        Doc[PDF / CSV / TXT / Images / URL] --> Chunker[Semantic Chunker]
-        Chunker --> Embedder[Gemini / Semantic Embedder]
-        Embedder --> VDB
-    end
+### Prerequisites
 
-    Synth --> Results[Structured Table / D3 Chart / JSON / CSV Export]
-    Results --> UI
-```
+* Python 3.10–3.13
+* Node.js 18 or later
+* npm
 
----
+### 1. Set Up the Backend
 
-## 📋 Features
-
-- **Multi-Agent Orchestration**: Specialized agents for conversation, query planning, vector extraction, dataset synthesis, and factual verification.
-- **Dynamic Dataset Generation**: Translates natural language queries into structured tables with auto-detected columns, downloadable as CSV or JSON.
-- **D3 Data Visualization**: Dynamic interactive Bar and Metric charts rendered on synthesized dataset records.
-- **Multi-Format Ingestion**: Ingests PDFs (pure-Python `pypdf`, no system binaries needed), CSV, JSON, TXT, images (OCR), and live web URLs.
-- **Dual-Mode Vector Database**: Connects to DataStax Astra DB when configured, with seamless, zero-config local vector store persistence when offline.
-- **Step Trace & Source Grounding**: Every response shows pipeline execution steps, similarity scores, and retrieved document snippets.
-
----
-
-## ⚡ Quickstart Guide
-
-### 1. Prerequisites
-- **Python**: 3.10 to 3.13
-- **Node.js**: v18.0 or newer
-
-### 2. Backend Setup
+Navigate to the project directory and create a virtual environment:
 
 ```bash
-# 1. Navigate to the project root
 cd /path/to/ragchat
 
-# 2. Create and activate a Python virtual environment
 python3 -m venv .venv
-source .venv/bin/activate    # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
+```
 
-# 3. Install Python dependencies
+On Windows, activate the environment using:
+
+```bash
+.venv\Scripts\activate
+```
+
+Install the dependencies and start the FastAPI server:
+
+```bash
 pip install -r requirements.txt
-
-# 4. Start the FastAPI backend server
 python backend/main.py
 ```
-*The backend API will be running at `http://localhost:8000`.*
 
----
+The backend is available at `http://localhost:8000`.
 
-### 3. Frontend Setup
+### 2. Set Up the Frontend
 
-In a new terminal window:
+Open a new terminal in the project directory:
 
 ```bash
-# 1. Install Node.js dependencies
 npm install
-
-# 2. Run the Next.js development server
 npm run dev
 ```
-*Open your browser and navigate to `http://localhost:3000`.*
 
----
+Open `http://localhost:3000` in your browser.
 
-### 4. Direct Document Ingestion (CLI)
+### 3. Ingest Documents Through the CLI
 
-To ingest all documents currently placed inside `backend/structurisation/files/`:
+Place the documents to be processed in `backend/structurisation/files/`.
+
+Run the ingestion script with the virtual environment activated:
 
 ```bash
-# With virtual environment activated:
 python backend/structurisation/main.py
 ```
 
----
+## API Reference
 
-## 📡 API Endpoints Reference
+| Method   | Endpoint         | Description                                   |
+| -------- | ---------------- | --------------------------------------------- |
+| `GET`    | `/`              | Check backend health and document statistics  |
+| `POST`   | `/api/chat`      | Execute a chat query and multi-agent pipeline |
+| `POST`   | `/api/upload`    | Upload supported documents                    |
+| `POST`   | `/api/url`       | Ingest content from a web URL                 |
+| `GET`    | `/api/documents` | List indexed documents and chunk counts       |
+| `DELETE` | `/api/documents` | Clear indexed documents                       |
+| `GET`    | `/api/config`    | Retrieve current configuration status         |
+| `POST`   | `/api/config`    | Update API credentials and model settings     |
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Health check and loaded document statistics |
-| `POST` | `/api/chat` | Chat & multi-agent query execution (`{"query": "..."}`) |
-| `POST` | `/api/upload` | Multipart file upload (PDF, TXT, CSV, JSON, PNG, JPG) |
-| `POST` | `/api/url` | Ingest web content from URL (`{"url": "https://..."}`) |
-| `GET` | `/api/documents` | List all indexed documents and chunk counts |
-| `DELETE` | `/api/documents` | Clear all documents from vector store |
-| `GET` | `/api/config` | Read current API configuration and readiness |
-| `POST` | `/api/config` | Update API keys and models dynamically |
+### Example Request
 
----
+Submit a natural language query to the chat endpoint:
 
-## 📁 Project Structure
-
+```json
+{
+  "query": "Extract the key entities and summarize the relevant information from the uploaded documents."
+}
 ```
+
+## Project Structure
+
+```text
 ragchat/
-├── .env.example                # Template for environment variables
-├── .env                        # Active configuration (Gemini & Astra keys)
-├── requirements.txt            # Clean Python dependencies
-├── package.json                # Next.js & React frontend dependencies
-├── setup.py                    # Project setup package metadata
+├── .env.example
+├── .env
+├── requirements.txt
+├── package.json
+├── setup.py
 │
-├── app/                        # Next.js Frontend (React 19, Tailwind v4)
+├── app/                         # Next.js frontend
 │   ├── components/
-│   │   └── BarChart.js         # Interactive D3 Bar Chart component
-│   ├── globals.css             # Dark theme styling tokens & scrollbars
-│   ├── layout.js               # Root layout & typography
-│   └── page.js                 # Chat UI, Settings modal, Dataset viewer
+│   │   └── BarChart.js          # D3.js visualization
+│   ├── globals.css
+│   ├── layout.js
+│   └── page.js
 │
-└── backend/                    # Python Backend (FastAPI)
-    ├── main.py                 # Primary FastAPI application & API routes
-    ├── config.py               # Centralized configuration & header overrides
+└── backend/                     # FastAPI backend
+    ├── main.py                  # API routes
+    ├── config.py                # Application configuration
     │
-    ├── agentify/               # Multi-Agent Subsystem
-    │   ├── master_agent.py     # MasterAgent orchestrator & step tracer
-    │   ├── agents.py           # Specialized agents (Query, Extraction, etc.)
-    │   └── vector_db.py        # Dual-mode Astra DB & local vector store
+    ├── agentify/                # Multi-agent subsystem
+    │   ├── master_agent.py      # Agent orchestration
+    │   ├── agents.py            # Specialized agents
+    │   └── vector_db.py         # Vector storage and retrieval
     │
-    └── structurisation/        # Document Ingestion Pipeline
-        ├── file_processor.py   # Multi-format parsing & text chunker
-        ├── embedder.py         # Embedding generator & VectorDB loader
-        ├── main.py             # CLI batch ingestion runner
-        ├── files/              # Input directory for documents (e.g. docs1.pdf)
-        └── output/             # Local vector store cache & extracted assets
+    └── structurisation/         # Document ingestion
+        ├── file_processor.py    # Parsing and chunking
+        ├── embedder.py          # Embedding and indexing
+        ├── main.py              # CLI ingestion
+        ├── files/               # Input documents
+        └── output/              # Generated assets and cache
 ```
 
+## Troubleshooting
+
+**Gemini API Errors**
+
+* Verify that the API key is valid and configured correctly.
+* Check API availability, model access, and usage quotas in [Google AI Studio](https://aistudio.google.com/).
+
+**Astra DB Connection Issues**
+
+* Verify the database endpoint, token, and permissions.
+* Confirm that the database is available and configured correctly.
+* Use local vector storage if the application's fallback implementation supports the required operations.
+
+**Port Conflicts**
+
+* Change the backend port using the `PORT` environment variable.
+* Update the frontend's backend URL configuration to match the new port.
+
 ---
 
-## 🛠️ Troubleshooting
+## Technology Stack
 
-- **Gemini API Key Issues:** Ensure your key starts with `AIzaSy...`. Check your usage quota at [Google AI Studio](https://aistudio.google.com/).
-- **Astra DB Connection:** If Astra DB is unreachable or credentials have expired, RAGChat automatically operates in local vector store mode with zero downtime.
-- **Port Conflict (8000 or 3000):** If port 8000 is occupied, you can change `PORT=8001` in `.env` and update the Backend URL inside the web UI Settings.
-
----
+* **Frontend:** Next.js, React, Tailwind CSS
+* **Backend:** Python, FastAPI
+* **AI and LLM:** Google Gemini
+* **Retrieval:** Retrieval-Augmented Generation (RAG), vector embeddings
+* **Vector Storage:** DataStax Astra DB, local vector store
+* **Visualization:** D3.js
+* **Document Processing:** PDF, CSV, JSON, TXT, OCR, web content
